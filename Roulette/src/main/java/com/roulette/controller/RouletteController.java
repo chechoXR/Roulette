@@ -12,9 +12,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.roulette.model.Bet;
 import com.roulette.model.Roulette;
+import com.roulette.repository.BetRepository;
 import com.roulette.repository.RouletteRepository;
 
 @Controller
@@ -23,6 +28,9 @@ public class RouletteController {
 
 	@Autowired
 	private RouletteRepository rouletteRepository;
+	
+	@Autowired
+	private BetRepository betRepository;
 	
 	@PostMapping
 	public ResponseEntity<?> createRoulette() {
@@ -47,6 +55,41 @@ public class RouletteController {
 	}
 	
 	
+	@PostMapping("/bet/number/{id}")
+	public ResponseEntity<?> makeBetNumber(@RequestHeader("userID") int userID, @RequestBody Bet bet, @PathVariable String id){
+		System.out.println(bet.toString());
+		
+		Optional<?> optionalRoulette = rouletteRepository.findById(id);
+		
+		
+		if(bet.getBet()>10000 || bet.getBetNumber()< 0 || bet.getBetNumber() > 36)
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+		
+		if(!optionalRoulette.isPresent())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		
+		
+		Roulette roulette = (Roulette) optionalRoulette.get();
+		System.out.println(roulette.toString());
+		if(!roulette.isOpen())
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		
+		bet.setRouletteID(""+id);
+		bet.setUserID(userID);
+		
+		bet.setBetID(betRepository.findAll().size()+"");
+		
+		betRepository.save(bet);
+				
+		return ResponseEntity.status(HttpStatus.CREATED).body(bet);
+	}
+	
+	@PostMapping("/bet/color")
+	public ResponseEntity<?> makeBetColor(@RequestHeader("userID") int userID, @RequestBody Bet bet ){
+		System.out.println(bet.toString());
+		return null;
+	}
+	
 	@GetMapping
 	public ResponseEntity<?> findAll() {
 		System.out.println(rouletteRepository.findAll().toString());
@@ -64,7 +107,13 @@ public class RouletteController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 	}
 	
+	
+	@GetMapping("/bets")
+	public ResponseEntity<?> getBets(){
+		return ResponseEntity.ok(betRepository.findAll());
 		
+	}
+	
 	private List<?> findAllOnList(){
 		return rouletteRepository.findAll();
 	}

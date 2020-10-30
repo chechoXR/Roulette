@@ -1,6 +1,7 @@
 package com.roulette.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.index.Indexed;
@@ -16,13 +17,12 @@ public class Roulette implements Serializable{
 	private int winner;
 	private boolean open;
 	
+	
+	
 	public Roulette(String id) {
 		this.id = id;
 		this.winner = -1;
 		this.open = false;
-		
-	
-		
 	}
 	
 	public String getId() {
@@ -51,6 +51,11 @@ public class Roulette implements Serializable{
 	
 	public void close() {
 		this.open=false;
+	}
+	
+	public boolean addBet(Bet bet) {
+		
+		return false;
 	}
 	
 	

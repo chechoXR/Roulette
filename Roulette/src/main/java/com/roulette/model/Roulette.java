@@ -1,8 +1,6 @@
 package com.roulette.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.index.Indexed;
 
@@ -39,7 +37,6 @@ public class Roulette implements Serializable{
 	public void setWinner(int winner) {
 		this.winner = winner;
 	}
-	
 	
 	public boolean isOpen() {
 		return open;

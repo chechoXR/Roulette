@@ -11,6 +11,7 @@ public class Bet implements Serializable {
 	private int bet;
 	private int betNumber;
 	private String betColor;
+	private double gain;
 	
 	public Bet() {
 		super();
@@ -20,6 +21,7 @@ public class Bet implements Serializable {
 		this.userID = userID;
 		this.bet = bet;
 		this.betNumber = betNumber;
+		this.gain=0;
 	}
 	
 	public Bet(int userID, int bet, String betColor) {
@@ -27,6 +29,7 @@ public class Bet implements Serializable {
 		this.bet = bet;
 		this.betColor = betColor;
 		this.betNumber=-1;
+		this.gain=0;
 	}
 	
 	public String getBetID() {
@@ -66,6 +69,14 @@ public class Bet implements Serializable {
 	}
 	
 	
+	public double getGain() {
+		return gain;
+	}
+
+	public void setGain(double gain) {
+		this.gain = gain;
+	}
+
 	@Override
 	public String toString() {
 		return "BetId: " + betID+" userID: " + userID +" Roulette ID: " + rouletteID + " bet: " + bet + " bet Number: "+ betNumber+" betColor: "+ betColor;

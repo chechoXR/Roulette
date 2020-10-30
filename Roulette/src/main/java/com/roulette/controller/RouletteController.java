@@ -1,8 +1,9 @@
 package com.roulette.controller;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,10 @@ import com.roulette.repository.RouletteRepository;
 @RequestMapping("/")
 public class RouletteController {
 
+	public static final int NUMBER_WIN_GAIN = 5;	
+	public static final double COLOR_WIN_GAIN = 1.8;
+	
+	
 	@Autowired
 	private RouletteRepository rouletteRepository;
 	
@@ -101,12 +106,56 @@ public class RouletteController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(bet);
 	}
 	
+	
+	@PostMapping("/close/{id}")
+	public ResponseEntity<?> closeBet(@PathVariable String id){
+		Optional<?> optionalRoulette = rouletteRepository.findById(id);
+		
+		if(!optionalRoulette.isPresent())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		
+		Roulette roulette = (Roulette) optionalRoulette.get();
+		roulette.close();
+		roulette.setWinner(new Random().nextInt(37));
+		
+		rouletteRepository.update(id, roulette);
+		
+		List<Bet> bets = (List<Bet>) betRepository.findAll();
+		List<Bet> betsOfRoulette = new ArrayList<Bet>(); 
+		
+		for(Bet bet: bets) {
+			if(bet.getBetNumber() != -1 && bet.getBetNumber() == roulette.getWinner())
+				bet.setGain(bet.getBet()*NUMBER_WIN_GAIN);
+			
+			if((bet.getBetColor().toLowerCase().equals("red") && roulette.getWinner()%2==0) || (bet.getBetColor().toLowerCase().equals("black") && roulette.getWinner()%2!=0))
+				bet.setGain(bet.getBet()*COLOR_WIN_GAIN);
+			
+			betRepository.update(bet.getBetID(), bet);
+			
+			if(bet.getRouletteID().equals(id))
+				betsOfRoulette.add(bet);
+		}
+		
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(betsOfRoulette);
+	}
+	
+	@GetMapping("/winner/{id}")
+	public ResponseEntity<?> getWinner(@PathVariable String id){
+		Optional<?> optionalRoulette = rouletteRepository.findById(id);
+		Roulette roulette = (Roulette) optionalRoulette.get();
+		
+		if(!optionalRoulette.isPresent())
+			if(!roulette.isOpen())
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		
+		return ResponseEntity.status(HttpStatus.FOUND).body(roulette.getWinner());
+	}
+	
 	@GetMapping
 	public ResponseEntity<?> findAll() {
 		System.out.println(rouletteRepository.findAll().toString());
 		return ResponseEntity.status(HttpStatus.ACCEPTED).body(rouletteRepository.findAll());
 	}
-	
 	
 	@GetMapping("/{id}")
 	public ResponseEntity<?> getRoulette(@PathVariable String id) {
@@ -117,7 +166,6 @@ public class RouletteController {
 		else
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 	}
-	
 	
 	@GetMapping("/bets")
 	public ResponseEntity<?> getBets(){

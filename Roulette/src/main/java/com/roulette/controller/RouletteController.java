@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.roulette.model.Bet;
 import com.roulette.model.Roulette;
 import com.roulette.repository.BetRepository;
@@ -57,37 +56,49 @@ public class RouletteController {
 	
 	@PostMapping("/bet/number/{id}")
 	public ResponseEntity<?> makeBetNumber(@RequestHeader("userID") int userID, @RequestBody Bet bet, @PathVariable String id){
-		System.out.println(bet.toString());
-		
+	
 		Optional<?> optionalRoulette = rouletteRepository.findById(id);
 		
-		
-		if(bet.getBet()>10000 || bet.getBetNumber()< 0 || bet.getBetNumber() > 36)
+		if(bet.getBet()>10000 || bet.getBetNumber()< 0 || bet.getBetNumber() > 36 || bet.getBetColor()!=null)
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 		
 		if(!optionalRoulette.isPresent())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		
-		
 		Roulette roulette = (Roulette) optionalRoulette.get();
-		System.out.println(roulette.toString());
+		
 		if(!roulette.isOpen())
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 		
-		bet.setRouletteID(""+id);
-		bet.setUserID(userID);
-		
 		bet.setBetID(betRepository.findAll().size()+"");
-		
+		bet.setUserID(userID);
+		bet.setRouletteID(""+id);
 		betRepository.save(bet);
 				
 		return ResponseEntity.status(HttpStatus.CREATED).body(bet);
 	}
 	
-	@PostMapping("/bet/color")
-	public ResponseEntity<?> makeBetColor(@RequestHeader("userID") int userID, @RequestBody Bet bet ){
-		System.out.println(bet.toString());
-		return null;
+	@PostMapping("/bet/color/{id}")
+	public ResponseEntity<?> makeBetColor(@RequestHeader("userID") int userID, @RequestBody Bet bet, @PathVariable String id ){
+		Optional<?> optionalRoulette = rouletteRepository.findById(id);
+		
+		if(bet.getBet()>10000 || bet.getBet()< 0 || bet.getBetNumber()!= -1 ||(!bet.getBetColor().toLowerCase().equals("black") && !bet.getBetColor().toLowerCase().equals("red")))
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+		
+		if(!optionalRoulette.isPresent())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		
+		Roulette roulette = (Roulette) optionalRoulette.get();
+		
+		if(!roulette.isOpen())
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		
+		bet.setBetID(betRepository.findAll().size()+"");
+		bet.setUserID(userID);
+		bet.setRouletteID(""+id);
+		betRepository.save(bet);
+				
+		return ResponseEntity.status(HttpStatus.CREATED).body(bet);
 	}
 	
 	@GetMapping
